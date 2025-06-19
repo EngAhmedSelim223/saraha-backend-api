@@ -1,0 +1,12 @@
+{
+  "name": "saraha-backend-api",
+  "version": "1.0.0",
+  "description": "Anonymous Messaging Platform Backend – Built with Node.js, Express.js, and MongoDB. Users can receive anonymous messages and manage their inbox securely.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
