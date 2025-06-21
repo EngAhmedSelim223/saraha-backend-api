@@ -2,12 +2,15 @@ import jwt from "jsonwebtoken";
 import userModel from "../DB/models/users.model.js";
 export const authentication = async (req, res, next) => {
   try {
-    const jwtSecretKey = process.env.JWT_SECRET;
+    const jwtUserSecretKey = process.env.JWT_SECRET_USER;
+    const jwtAdminSecretKey = process.env.JWT_SECRET_ADMIN;
     const { authorization } = req.headers;
     if (!authorization) {
       return res.status(400).json({ msg: "unauthorized user" });
     }
-    const decodedToken = jwt.verify(authorization, jwtSecretKey);
+    const [prefix, token] = authorization.split(" ");
+    const SIGNATURE_TOKEN = prefix == "admin" ? jwtAdminSecretKey : jwtUserSecretKey;
+    const decodedToken = jwt.verify(token, SIGNATURE_TOKEN);
     if (!decodedToken?.id) {
       return res.status(400).json({ msg: "Invalid Token" });
     }

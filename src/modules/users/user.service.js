@@ -2,15 +2,12 @@ import userModel from "../../DB/models/users.model.js";
 import bcrypt from "bcrypt";
 import CryptoJS from "crypto-js";
 import jwt from "jsonwebtoken";
-import path from "path";
-import dotenv from "dotenv";
-dotenv.config({ path: path.resolve("config/.env") });
-const encryptionKey = process.env.PHONE_ENCRYPTION_KEY;
-const jwtSecretKey = process.env.JWT_SECRET;
-const saltRounds = process.env.SALT_ROUNDS;
 //========================= NOTE: Signup New Users =============================
 export const signup = async (req, res, next) => {
   try {
+    const encryptionKey = process.env.PHONE_ENCRYPTION_KEY;
+    const saltRounds = process.env.SALT_ROUNDS;
+
     const { name, email, password, phone, gender } = req.body;
     const hashedPassword = bcrypt.hashSync(password, parseInt(saltRounds));
     const encryptPhone = CryptoJS.AES.encrypt(phone, encryptionKey).toString();
@@ -23,6 +20,9 @@ export const signup = async (req, res, next) => {
 //========================= NOTE: SignIn Users =================================
 export const signIn = async (req, res, next) => {
   try {
+    const jwtUserSecretKey = process.env.JWT_SECRET_USER;
+    const jwtAdminSecretKey = process.env.JWT_SECRET_ADMIN;
+
     const { email, password } = req.body;
     const user = await userModel.findOne({ email });
     if (!user) {
@@ -33,7 +33,11 @@ export const signIn = async (req, res, next) => {
       return res.status(400).json({ msg: "Invalid Password" });
     }
 
-    const token = jwt.sign({ email: user.email, id: user._id }, jwtSecretKey, { expiresIn: "1h" });
+    const token = jwt.sign(
+      { email: user.email, id: user._id },
+      user.role == "admin" ? jwtAdminSecretKey : jwtUserSecretKey,
+      { expiresIn: "1h" }
+    );
     return res.status(201).json({ msg: "Done..", token });
   } catch (error) {
     return res.status(500).json({ msg: "Error SignIn", message: error.message });
@@ -42,6 +46,7 @@ export const signIn = async (req, res, next) => {
 //========================= NOTE: Get User Profile =============================
 export const getUserProfile = async (req, res, next) => {
   try {
+    const encryptionKey = process.env.PHONE_ENCRYPTION_KEY;
     const user = await userModel.findById(req.userId);
     const phoneDecrypt = CryptoJS.AES.decrypt(user.phone, encryptionKey).toString(CryptoJS.enc.Utf8);
     user.phone = phoneDecrypt;
